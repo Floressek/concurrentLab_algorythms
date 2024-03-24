@@ -28,12 +28,12 @@ cd java-synchronization-algorithms
 ```
 
 3. Compile the Java files (example):
-```java
+```bash
 javac Zadanie_1/Dekker.java Zadanie_2/Peterson.java Zadanie_3/Lamport.java Zadanie_4/SemaphoreExample.java
 ```
 
 4. Run the compiled Java classes (example):
-```java
+```bash
 java Zadanie_1.Dekker
 java Zadanie_2.Peterson
 java Zadanie_3.Lamport
