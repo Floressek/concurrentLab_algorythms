@@ -19,10 +19,11 @@ This project demonstrates the implementation of classic synchronization algorith
 ### Running the Examples
 
 1. Clone the repository:
-git clone https://your-repository-url-here.git
+```bash
+git clone https://your-repository-url-here.git](https://github.com/Floressek/concurrentLab_algorythms)
+```
 
-
-2. Navigate to the cloned directory:
+3. Navigate to the cloned directory:
 ```bash
 cd java-synchronization-algorithms
 ```
