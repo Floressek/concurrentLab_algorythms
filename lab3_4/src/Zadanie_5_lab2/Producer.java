@@ -1,5 +1,4 @@
-package Exercise_1;
-
+package Zadanie_5_lab2;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 

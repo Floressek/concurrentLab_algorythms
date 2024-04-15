@@ -1,4 +1,4 @@
-package Exercise_1;
+package Zadanie_5_lab2;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
