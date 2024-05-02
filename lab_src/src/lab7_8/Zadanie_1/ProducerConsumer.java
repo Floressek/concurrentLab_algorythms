@@ -1,20 +1,23 @@
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
+package src.lab7_8.Zadanie_1;
+
 import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ProducerConsumer {
 
     private static final int BUFFER_SIZE = 10;
-    private String[] buffer = new String[BUFFER_SIZE];
+    private final String[] buffer = new String[BUFFER_SIZE];
     private int count = 0, in = 0, out = 0;
 
-    private ReentrantLock lock = new ReentrantLock();
-    private Condition notFull = lock.newCondition();
-    private Condition notEmpty = lock.newCondition();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition notFull = lock.newCondition();
+    private final Condition notEmpty = lock.newCondition();
 
     class Producer implements Runnable {
-        private int id;
-        private int repetitions;
+        private final int id;
+        private final int repetitions;
+
 
         public Producer(int id, int repetitions) {
             this.id = id;
@@ -50,8 +53,8 @@ public class ProducerConsumer {
     }
 
     class Consumer implements Runnable {
-        private int id;
-        private int repetitions;
+        private final int id;
+        private final int repetitions;
 
         public Consumer(int id, int repetitions) {
             this.id = id;

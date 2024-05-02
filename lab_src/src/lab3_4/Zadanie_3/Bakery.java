@@ -1,4 +1,4 @@
-package Zadanie_3;
+package src.lab3_4.Zadanie_3;
 
 
 import java.util.Random;
@@ -126,9 +126,9 @@ public class Bakery extends Thread {
         }
 
         // Wait all threads to finish.
-        for (int i = 0; i < threads.length; i++) {
+        for (Bakery thread : threads) {
             try {
-                threads[i].join();
+                thread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

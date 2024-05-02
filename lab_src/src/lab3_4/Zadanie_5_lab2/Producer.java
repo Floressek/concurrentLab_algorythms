@@ -1,4 +1,4 @@
-package Zadanie_5_lab2;
+package src.lab3_4.Zadanie_5_lab2;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 

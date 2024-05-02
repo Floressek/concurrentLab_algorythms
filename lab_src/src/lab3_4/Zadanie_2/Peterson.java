@@ -1,4 +1,4 @@
-package Zadanie_2;
+package src.lab3_4.Zadanie_2;
 
 import java.util.Random;
 

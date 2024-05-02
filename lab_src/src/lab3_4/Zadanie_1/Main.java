@@ -1,4 +1,5 @@
-package Zadanie_1;
+package src.lab3_4.Zadanie_1;
+
 import java.util.Scanner;
 
 class Main {
