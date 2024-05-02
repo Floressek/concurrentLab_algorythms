@@ -1,8 +1,6 @@
-package src.lab7_8.Zadanie_1;
+package src.lab7_8.Zadanie_1_v2;
 
-import src.lab7_8.Zadanie_2.Reader;
-
-public class ProducerConsumer {
+public class MainLibrary {
     private static final int BUFFER_SIZE = 10;
     private static final Buffer buffer = new Buffer(BUFFER_SIZE);
     private static Thread[] producers;
@@ -12,7 +10,8 @@ public class ProducerConsumer {
         // Data
         int producersCount = 4;
         int consumersCount = 5;
-        int repetitions = 100;
+        int repetitions_consumer = 100;
+        int repetitions_producer = 80;
         // Time for consumers
         Consumer.a = 2;
         Consumer.b = 12;
@@ -24,12 +23,12 @@ public class ProducerConsumer {
         consumers = new Thread[consumersCount];
 
         for (int i = 0; i < producersCount; i++) {
-            producers[i] = new Thread(new Producer(buffer, i + 1, repetitions));
+            producers[i] = new Thread(new Producer(buffer, i + 1, repetitions_producer));
             producers[i].start();
         }
 
         for (int i = 0; i < consumersCount; i++) {
-            consumers[i] = new Thread(new Consumer(buffer, i + 1, repetitions));
+            consumers[i] = new Thread(new Consumer(buffer, i + 1, repetitions_consumer));
             consumers[i].start();
         }
 
