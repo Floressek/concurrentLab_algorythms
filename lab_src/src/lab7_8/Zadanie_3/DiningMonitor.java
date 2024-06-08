@@ -23,6 +23,7 @@ public class DiningMonitor {
                 philosophersAtTheTable++;
                 printState(">>> (1)", philosophersId, count);
             } else {
+                // If forks are not available, print a message
                 System.out.printf("Philosopher %d is unable to eat\n", philosophersId);
             }
 

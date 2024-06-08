@@ -1,24 +1,45 @@
 package src.simulation;
 
 import lombok.Setter;
-import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 class Visitor extends Thread {
+
+    private static Random RAND = new Random();
+
     private int x, y;
+
+    private int sleep = 100;
+    int step = 20;
 
     @Setter
     private Color color = Color.PINK;
+
+    private void randomizeVisiting() {
+        visiting = RAND.nextBoolean();
+    }
+
+    private boolean visiting = true;
+
+    private Color resolveColor() {
+        if (visiting) {
+            return color;
+        } else {
+//            return color.brighter();
+            return color.darker();
+        }
+    }
 
     @Setter
     private JPanel panel;
 
     private int size = 10;
 
-    private Plan plan;
+    final private Plan plan;
 
     private Visitable visitable;
     private int index;
@@ -31,8 +52,8 @@ class Visitor extends Thread {
         this.visitable = plan.getVisitable(index);
         this.goalRect = plan.resolveGoalRect(index);
 
-        this.x = plan.getStarPosition().x;
-        this.y = plan.getStarPosition().y;
+        this.x = plan.getStartPosition().x;
+        this.y = plan.getStartPosition().y;
     }
 
     void detectGoal() {
@@ -58,10 +79,17 @@ class Visitor extends Thread {
     void onEntry(Visitable visitable) {
         try {
             visitable.onEntry();
+
+            if (visitable instanceof Room) {
+                randomizeVisiting();
+            } else {
+                visiting = false;
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
+
     void onExit(Visitable visitable) {
         visitable.onExit();
     }
@@ -71,8 +99,46 @@ class Visitor extends Thread {
             return;
         }
 
-        var step = 20;
+        if (visiting) {
+            moveStraight();
+        } else {
+            moveRandom();
+        }
 
+        detectGoal();
+    }
+
+    private void moveStraight() {
+        // fixme
+        // Move towards the center of the goal rectangle
+        int goalCenterX = goalRect.x + goalRect.width / 2;
+        int goalCenterY = goalRect.y + goalRect.height / 2;
+
+        // Calculate the distance to the goal
+        int dx = goalCenterX - x;
+        int dy = goalCenterY - y;
+
+        // Calculate the unit vector towards the goal
+        double distance = Math.sqrt(dx * dx + dy * dy); // Pitagoras
+        if (distance > 0) {
+            // Normalize the vector? (make it a unit vector)
+            double vx = dx / distance;
+            double vy = dy / distance;
+
+            // Move towards the goal step by step
+            x += (int) (vx * step);
+            y += (int) (vy * step);
+        }
+
+        // Ensure the visitor stays within the panel
+        x = Math.max(x, visitable.area.x);
+        x = Math.min(x, visitable.area.x + visitable.area.width - size);
+        y = Math.max(y, visitable.area.y);
+        y = Math.min(y, visitable.area.y + visitable.area.height - size);
+//        moveRandom();
+    }
+
+    public void moveRandom() {
         int dx = ThreadLocalRandom.current().nextInt(-step, step + 1);
         int dy = ThreadLocalRandom.current().nextInt(-step, step + 1);
         x += dx;
@@ -83,22 +149,9 @@ class Visitor extends Thread {
         x = Math.min(x, visitable.area.x + visitable.area.width - size);
         y = Math.max(y, visitable.area.y);
         y = Math.min(y, visitable.area.y + visitable.area.height - size);
-
-        detectGoal();
-
-
-//        x = Math.max(0, Math.min(x, panel.getWidth() - 10));
-//        y = Math.max(0, Math.min(y, panel.getHeight() - 10));
     }
 
     public void run() {
-//        try {
-//            Thread.sleep(new Random().nextInt(0, 30000));
-////            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 30000));
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-
         onEntry(visitable);
 
         while (true) {
@@ -108,7 +161,7 @@ class Visitor extends Thread {
             panel.repaint();
 
             try {
-                Thread.sleep(100); // Delay for smooth animation
+                Thread.sleep(sleep); // Delay for smooth animation
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -116,6 +169,8 @@ class Visitor extends Thread {
     }
 
     public void paint(Graphics g) {
+        Color color = resolveColor();
+
         g.setColor(color);
         g.fillOval(x, y, size, size);
 

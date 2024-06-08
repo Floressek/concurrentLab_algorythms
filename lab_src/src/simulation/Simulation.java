@@ -3,8 +3,8 @@ package src.simulation;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 
 public class Simulation extends JFrame {
@@ -33,15 +33,13 @@ public class Simulation extends JFrame {
         visitors = new ArrayList<>();
         var count = 50;
 
+        var executor = Executors.newVirtualThreadPerTaskExecutor();
+
         for (int i = 0; i < count; i++) {
             var plan = i % 2 == 0 ? planA : planB;
             var color = i % 2 == 0 ? Color.BLUE : Color.RED;
 
             var visitor = new Visitor(plan);
-
-//            if (plan == planA) {
-//                continue;
-//            }
 
             visitor.setColor(color);
             visitor.setPanel(panel);
@@ -52,8 +50,15 @@ public class Simulation extends JFrame {
         plans.add(planB);
 
         for (var v : visitors) {
-            v.start();
+//            v.start();
+            executor.execute(Thread.ofVirtual().start(v));
         }
+
+        plans.get(0).getVisitables().stream()
+                .filter(v -> v instanceof Runnable) // Filter only Runnable objects
+                .map(Runnable.class::cast) // Cast to Runnable for each object in the stream
+                .forEach(v -> executor.execute(Thread.ofVirtual().start(v))); // Execute each Runnable object in the stream using the executor
+
     }
 
     Plan createPlan(Plan.PlanType planType) {
@@ -71,7 +76,7 @@ public class Simulation extends JFrame {
                 var bigCapacity = smallCapacity * 2;
                 var liftCapacity = 10;
 
-                // romm 1
+                // room 1
                 var room1 = new Room(new Rectangle(100, 100, smallRoomSize, smallRoomSize), smallCapacity);
 
                 // conn12
@@ -79,24 +84,26 @@ public class Simulation extends JFrame {
                 var conn12 = new Connector(area);
 
                 // room2
-                var room2 = new Room(new Rectangle(conn12.area.x + conn12.area.width, room1.area.y, bigRoomSize, bigRoomSize), bigCapacity);
+                var room2 = new Room(new Rectangle(conn12.area.x + conn12.area.width, room1.area.y, bigRoomSize, bigRoomSize), bigCapacity); // description: room2 is created with the area of conn12 and the size of bigRoomSize and bigCapacity
 
                 // lift1
                 area = room2.createArea(Visitable.Side.Top, liftWidth, liftHeight);
-                var lift1 = new Lift(area, liftCapacity);
-                lift1.area.x = lift1.area.x + bigRoomSize / 4;
+                area.x = area.x + bigRoomSize / 4;
+                var elevator1 = new Elevator(area, liftCapacity);
+                elevator1.setPanel(panel);
 
                 // conn23
                 area = room2.createArea(Visitable.Side.Right, connWidth, connHeight);
+                area.y = conn12.area.y;
                 var conn23 = new Connector(area);
-                conn23.area.y = conn12.area.y;
 
                 // room3
                 var room3 = new Room(new Rectangle(conn23.area.x + conn23.area.width, room1.area.y, smallRoomSize, smallRoomSize), smallCapacity);
 
                 // lift2
                 area = room3.createArea(Visitable.Side.Top, liftWidth, liftHeight);
-                var lift2 = new Lift(area, liftCapacity);
+                var elevator2 = new Elevator(area, liftCapacity);
+                elevator2.setPanel(panel);
 
                 // con34
                 area = room3.createArea(Visitable.Side.Bottom, connWidth, connHeight);
@@ -105,19 +112,6 @@ public class Simulation extends JFrame {
                 // room4
                 var room4 = new Room(new Rectangle(room3.area.x, conn34.area.y + conn34.area.height, smallRoomSize, smallRoomSize), smallCapacity);
 
-                plan.addVisitable(room1);
-                plan.addVisitable(conn12);
-                plan.addVisitable(room2);
-                plan.addVisitable(conn23);
-                plan.addVisitable(room3);
-                plan.addVisitable(conn34);
-                plan.addVisitable(room4);
-                plan.setStarPosition(new Point(room1.area.x + 1, room1.area.y + room1.area.height / 2));
-                plan.setEndPosition(new Point(room4.area.x + room4.area.width / 2, room4.area.y + room1.area.height - 1));
-
-//                plan.addVisitable(lift1);
-//                plan.addVisitable(room1);
-//                plan.addVisitable(conn12);
 //                plan.addVisitable(room1);
 //                plan.addVisitable(conn12);
 //                plan.addVisitable(room2);
@@ -125,9 +119,24 @@ public class Simulation extends JFrame {
 //                plan.addVisitable(room3);
 //                plan.addVisitable(conn34);
 //                plan.addVisitable(room4);
-//                plan.addVisitable(conn34);
-//                plan.addVisitable(room3);
-//                plan.addVisitable(lift2);
+//                plan.setStarPosition(new Point(room1.area.x + 1, room1.area.y + room1.area.height / 2));
+//                plan.setEndPosition(new Point(room4.area.x + room4.area.width / 2, room4.area.y + room1.area.height - 1));
+
+                plan.addVisitable(elevator1);
+                plan.addVisitable(room2);
+                plan.addVisitable(conn12);
+                plan.addVisitable(room1);
+                plan.addVisitable(conn12);
+                plan.addVisitable(room2);
+                plan.addVisitable(conn23);
+                plan.addVisitable(room3);
+                plan.addVisitable(conn34);
+                plan.addVisitable(room4);
+                plan.addVisitable(conn34);
+                plan.addVisitable(room3);
+                plan.addVisitable(elevator2);
+                plan.setStartPosition(new Point(elevator1.area.x + elevator1.area.width / 2, elevator1.area.y));
+                plan.setEndPosition(new Point(elevator2.area.x + elevator2.area.width / 2, elevator2.area.y));
             }
             case B -> {
                 throw new RuntimeException("Not implemented");
