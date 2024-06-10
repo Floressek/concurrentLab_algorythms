@@ -1,22 +1,82 @@
 package src.simulation;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
 public class Simulation extends JFrame {
-    private JPanel panel;
 
-    List<Plan> plans = new ArrayList<>();
-    List<Visitor> visitors = new ArrayList<>();
+    @Getter
+    @Setter
+    private int visitorCount = 10;
+    @Getter
+    @Setter
+    private int smallCapacity = 5;
+    @Getter
+    @Setter
+    private int bigCapacity = smallCapacity * 2;
+    @Getter
+    @Setter
+    private int liftCapacity = 5;
+
+    private JPanel panel;
+    private List<Plan> plans = new ArrayList<>();
+    private List<Visitor> visitors = new ArrayList<>();
+
+    private ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public Simulation() throws HeadlessException {
         setTitle("Visitor Simulation");
-        setSize(800, 600);
+        setSize(1980, 1024);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        var btnPause = new JToggleButton("Pause");
+        var btnRestart = new JButton("Restart");
+        var sliderVisitorCount = getjSlider();
+
+
+        var cmdPanel = new JToolBar();
+        cmdPanel.add(btnRestart);
+        cmdPanel.addSeparator();
+        cmdPanel.add(btnPause);
+        cmdPanel.addSeparator();
+        cmdPanel.add(new JLabel("Visitors:"));
+        cmdPanel.add(sliderVisitorCount);
+
+        btnPause.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                int state = e.getStateChange();
+
+                if (state == ItemEvent.SELECTED) {
+                    pauseSimulation();
+                    btnPause.setText("Resume");
+                } else {
+                    resumeSimulation();
+                    btnPause.setText("Pause");
+                }
+            }
+        });
+
+        btnRestart.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restartSimulation();
+            }
+        });
 
         panel = new JPanel() {
             public void paintComponent(Graphics g) {
@@ -25,21 +85,50 @@ public class Simulation extends JFrame {
                 visitors.forEach(v -> v.paint(g));
             }
         };
+        add(cmdPanel, BorderLayout.PAGE_START);
         add(panel, BorderLayout.CENTER);
+    }
+
+    private JSlider getjSlider() {
+        var sliderVisitorCount = new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
+        sliderVisitorCount.setMajorTickSpacing(10);
+        sliderVisitorCount.setMinorTickSpacing(5);
+        sliderVisitorCount.setPaintTicks(true);
+        sliderVisitorCount.setPaintLabels(true);
+        sliderVisitorCount.addChangeListener(e -> {
+            JSlider source = (JSlider)e.getSource();
+            if (!source.getValueIsAdjusting()) {
+                visitorCount = (int)source.getValue();
+                restartSimulation();  // Restart simulation with new visitor count
+            }
+        });
+        return sliderVisitorCount;
+    }
+
+    List<Runnable> getRunnable() {
+        var result = new ArrayList<Runnable>(visitors);
+
+        if (plans.size() != 0) {
+            plans.get(0).getVisitables().stream()
+                    .filter(v -> v instanceof Runnable)
+                    .map(Runnable.class::cast)
+                    .forEach(v -> result.add(v));
+        }
+        return result;
+    }
+
+    private void createSimulation() {
+        visitors = new ArrayList<>();
+        plans = new ArrayList<>();
 
         var planA = createPlan(Plan.PlanType.A);
         var planB = planA.reverse();
 
-        visitors = new ArrayList<>();
-        var count = 50;
-
-        var executor = Executors.newVirtualThreadPerTaskExecutor();
-
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < visitorCount; i++) {
             var plan = i % 2 == 0 ? planA : planB;
             var color = i % 2 == 0 ? Color.BLUE : Color.RED;
 
-            var visitor = new Visitor(plan);
+            var visitor = new Visitor(String.format("%s", i + 1), plan);
 
             visitor.setColor(color);
             visitor.setPanel(panel);
@@ -48,17 +137,41 @@ public class Simulation extends JFrame {
         }
 
         plans.add(planB);
+    }
 
-        for (var v : visitors) {
-//            v.start();
+    void restartSimulation() {
+        for (var v : getRunnable()) {
+            if (v instanceof Controllable)
+                ((Controllable) v).terminate();
+        }
+        createSimulation();
+        startSimulation();
+    }
+
+    void startSimulation() {
+        for (var v : getRunnable()) {
             executor.execute(Thread.ofVirtual().start(v));
         }
+    }
 
-        plans.get(0).getVisitables().stream()
-                .filter(v -> v instanceof Runnable) // Filter only Runnable objects
-                .map(Runnable.class::cast) // Cast to Runnable for each object in the stream
-                .forEach(v -> executor.execute(Thread.ofVirtual().start(v))); // Execute each Runnable object in the stream using the executor
+    void pauseSimulation() {
+        for (var v : getRunnable()) {
+            try {
+                if (v instanceof Controllable) {
+                    ((Controllable) v).pause();
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
+    void resumeSimulation() {
+        for (var v : getRunnable()) {
+            if (v instanceof Controllable) {
+                ((Controllable) v).resume();
+            }
+        }
     }
 
     Plan createPlan(Plan.PlanType planType) {
@@ -66,30 +179,27 @@ public class Simulation extends JFrame {
 
         switch (planType) {
             case A -> {
-                var smallRoomSize = 100;
+                var smallRoomSize = 100 * 3;
                 var bigRoomSize = (int) (smallRoomSize * Math.sqrt(2));
                 var connWidth = 30;
                 var connHeight = 26;
-                var liftWidth = 80;
+                var liftWidth = 80 * 3;
                 var liftHeight = 30;
-                var smallCapacity = 5;
-                var bigCapacity = smallCapacity * 2;
-                var liftCapacity = 10;
 
                 // room 1
-                var room1 = new Room(new Rectangle(100, 100, smallRoomSize, smallRoomSize), smallCapacity);
+                var room1 = new Room("R1", new Rectangle(100, 100 * 3, smallRoomSize, smallRoomSize), smallCapacity);
 
                 // conn12
                 var area = room1.createArea(Visitable.Side.Right, connWidth, connHeight);
                 var conn12 = new Connector(area);
 
                 // room2
-                var room2 = new Room(new Rectangle(conn12.area.x + conn12.area.width, room1.area.y, bigRoomSize, bigRoomSize), bigCapacity); // description: room2 is created with the area of conn12 and the size of bigRoomSize and bigCapacity
+                var room2 = new Room("R2", new Rectangle(conn12.area.x + conn12.area.width, room1.area.y, bigRoomSize, bigRoomSize), bigCapacity);
 
                 // lift1
                 area = room2.createArea(Visitable.Side.Top, liftWidth, liftHeight);
                 area.x = area.x + bigRoomSize / 4;
-                var elevator1 = new Elevator(area, liftCapacity);
+                var elevator1 = new Elevator("E1", area, liftCapacity);
                 elevator1.setPanel(panel);
 
                 // conn23
@@ -98,11 +208,11 @@ public class Simulation extends JFrame {
                 var conn23 = new Connector(area);
 
                 // room3
-                var room3 = new Room(new Rectangle(conn23.area.x + conn23.area.width, room1.area.y, smallRoomSize, smallRoomSize), smallCapacity);
+                var room3 = new Room("R3", new Rectangle(conn23.area.x + conn23.area.width, room1.area.y, smallRoomSize, smallRoomSize), smallCapacity);
 
                 // lift2
                 area = room3.createArea(Visitable.Side.Top, liftWidth, liftHeight);
-                var elevator2 = new Elevator(area, liftCapacity);
+                var elevator2 = new Elevator("E2", area, liftCapacity);
                 elevator2.setPanel(panel);
 
                 // con34
@@ -110,17 +220,7 @@ public class Simulation extends JFrame {
                 var conn34 = new Connector(area);
 
                 // room4
-                var room4 = new Room(new Rectangle(room3.area.x, conn34.area.y + conn34.area.height, smallRoomSize, smallRoomSize), smallCapacity);
-
-//                plan.addVisitable(room1);
-//                plan.addVisitable(conn12);
-//                plan.addVisitable(room2);
-//                plan.addVisitable(conn23);
-//                plan.addVisitable(room3);
-//                plan.addVisitable(conn34);
-//                plan.addVisitable(room4);
-//                plan.setStarPosition(new Point(room1.area.x + 1, room1.area.y + room1.area.height / 2));
-//                plan.setEndPosition(new Point(room4.area.x + room4.area.width / 2, room4.area.y + room1.area.height - 1));
+                var room4 = new Room("R4", new Rectangle(room3.area.x, conn34.area.y + conn34.area.height, smallRoomSize, smallRoomSize), smallCapacity);
 
                 plan.addVisitable(elevator1);
                 plan.addVisitable(room2);
@@ -137,6 +237,7 @@ public class Simulation extends JFrame {
                 plan.addVisitable(elevator2);
                 plan.setStartPosition(new Point(elevator1.area.x + elevator1.area.width / 2, elevator1.area.y));
                 plan.setEndPosition(new Point(elevator2.area.x + elevator2.area.width / 2, elevator2.area.y));
+
             }
             case B -> {
                 throw new RuntimeException("Not implemented");
@@ -148,10 +249,50 @@ public class Simulation extends JFrame {
         return plan;
     }
 
+    private static Properties loadConfig(String path) {
+        // load data
+        if (path == null) {
+            path = Simulation.class.getResource("config.properties").getPath();
+        }
+
+        try {
+            var config = new Properties();
+            config.load(new FileInputStream(path));
+            return config;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) {
+        String path = args.length != 0 ? args[0] : null;
+        var config = loadConfig(path);
+
+        var simulation = new Simulation();
+
+        if (config != null) {
+            simulation.loadFromConfig(config);
+        }
+
+        simulation.createSimulation();
+        simulation.startSimulation();
+
         SwingUtilities.invokeLater(() -> {
-            var simulation = new Simulation();
             simulation.setVisible(true);
         });
+    }
+
+    private void loadFromConfig(Properties config) {
+        int count = Integer.valueOf(config.getProperty("simulation.visitor-count", "10"));
+        visitorCount = count;
+        int small = Integer.valueOf(config.getProperty("simulation.small-capacity", "5"));
+        smallCapacity = small;
+        int big = Integer.valueOf(config.getProperty("simulation.big-capacity", "10"));
+        bigCapacity = big;
+        int lift = Integer.valueOf(config.getProperty("simulation.lift-capacity", "5"));
+        liftCapacity = lift;
+
+
     }
 }

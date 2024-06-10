@@ -1,9 +1,19 @@
 package src.simulation;
 
+import lombok.Getter;
+
 import java.awt.*;
+import java.util.Queue;
+import java.util.StringJoiner;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.SynchronousQueue;
 
 public abstract class Visitable extends Paintable {
+    @Getter
+    protected final String name;
+
     enum Side {
         Top, Bottom, Left, Right
     }
@@ -11,21 +21,43 @@ public abstract class Visitable extends Paintable {
     protected Rectangle area;
     protected int capacity = 1;
 
+    int visitorCount = 0; // Number of visitors in the visitable
+
     private Semaphore semaphore;
 
-    public Visitable(Rectangle area, int capacity) {
+    public Visitable(String name, Rectangle area, int capacity) {
+        this.name = name;
         this.area = area;
         this.capacity = capacity;
         this.semaphore = new Semaphore(capacity);
     }
 
-    public Visitable(Rectangle area) {
+    public Visitable(String name, Rectangle area) {
+        this.name = name;
         this.area = area;
     }
 
     public void paint(Graphics g) {
         g.setColor(color);
         g.drawRect(area.x, area.y, area.width, area.height);
+
+        if (g instanceof Graphics2D) {
+            g.setColor(Color.BLACK);
+            Graphics2D g2 = (Graphics2D)g;
+            Font font = new Font("Serif", Font.BOLD, 12);
+            g2.setFont(font);
+
+            var sb = new StringBuffer();
+            if (name != null) {
+                sb.append(name);
+
+                sb.append('[');
+                sb.append(visitorCount - queue.size());
+                sb.append(']');
+            }
+
+            g2.drawString(sb.toString(), area.x, area.y - 10);
+        }
     }
 
     Rectangle createArea(Side side, int width, int height) {
@@ -64,11 +96,37 @@ public abstract class Visitable extends Paintable {
         }
     }
 
-    void onEntry() throws InterruptedException {
-        semaphore.acquire();
+    private final Object lock = new Object();
+
+    private Queue queue = new LinkedBlockingQueue();
+
+    public void onEntry(Visitor v) throws InterruptedException {
+        if (!semaphore.tryAcquire()) {
+            queue.offer(v);
+            v.pause();
+        }
+
+        synchronized (lock) {
+            visitorCount++;
+        }
     }
-    void onExit() {
-        semaphore.release();
+    public void onExit(Visitor v) {
+        semaphore.release(1);
+
+        synchronized (lock) {
+            visitorCount--;
+            var next = (Visitor) queue.poll(); // Get next visitor
+            if (next != null) {
+                next.resume(); // Resume next visitor
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", getClass().getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .toString();
     }
 }
 
