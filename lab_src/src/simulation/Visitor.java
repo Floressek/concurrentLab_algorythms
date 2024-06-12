@@ -8,6 +8,10 @@ import java.util.Random;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Visitor class that extends Paintable and implements Runnable and Controllable interfaces.
+ * This class represents a visitor in the simulation.
+ */
 class Visitor extends Paintable implements Runnable, Controllable {
 
     private static Random RAND = new Random();
@@ -67,6 +71,11 @@ class Visitor extends Paintable implements Runnable, Controllable {
     // Goal rectangle for the visitor
     private Rectangle goalRect;
 
+    /**
+     * Constructor for the Visitor class.
+     * @param name Name of the visitor
+     * @param plan Plan of the visitor
+     */
     public Visitor(String name, Plan plan) {
         this.name = name;
         this.plan = plan;
@@ -132,9 +141,10 @@ class Visitor extends Paintable implements Runnable, Controllable {
         onEntry(visitable); // Entry the visitable
     }
 
+    // Entry point for the visitor
     void onEntry(Visitable visitable) {
         try {
-            visitable.onEntry(this);
+            visitable.onEntry(this); // Entry the visitor to the visitable
 
             if (visitable instanceof Room) {
                 randomizeVisiting();
@@ -312,6 +322,7 @@ class Visitor extends Paintable implements Runnable, Controllable {
         g.drawRoundRect(goalRect.x, goalRect.y, goalRect.width, goalRect.height, 3, 3);
     }
 
+    // Terminate the visitor
     @Override
     public void terminate() {
         synchronized (lock) {
@@ -319,6 +330,7 @@ class Visitor extends Paintable implements Runnable, Controllable {
         }
     }
 
+    // check if the visitor is terminated
     @Override
     public boolean isTerminated() {
         synchronized (lock) {
@@ -326,6 +338,7 @@ class Visitor extends Paintable implements Runnable, Controllable {
         }
     }
 
+    // Pause the visitor
     @Override
     public void pause() throws InterruptedException {
         synchronized (lock) {
@@ -350,6 +363,7 @@ class Visitor extends Paintable implements Runnable, Controllable {
         }
     }
 
+    // Check if the visitor is paused
     @Override
     public boolean isPaused() {
         synchronized (lock) {
@@ -357,9 +371,10 @@ class Visitor extends Paintable implements Runnable, Controllable {
         }
     }
 
+
     @Override
     public String toString() {
-        return new StringJoiner(", ", getClass().getSimpleName() + "[", "]")
+        return new StringJoiner(", ", getClass().getSimpleName() + "[", "]") // Return the visitor as a string
                 .add("name='" + name + "'")
                 .toString();
     }

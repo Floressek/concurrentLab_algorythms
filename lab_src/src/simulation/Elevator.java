@@ -9,6 +9,10 @@ import java.awt.*;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Elevator class that extends Visitable and implements Runnable and Controllable interfaces.
+ * This class represents an elevator in the simulation.
+ */
 public class Elevator extends Visitable implements Runnable, Controllable {
 
     // Lock for synchronization
@@ -45,6 +49,12 @@ public class Elevator extends Visitable implements Runnable, Controllable {
 
     private Direction direction = Direction.Down;
 
+    /**
+     * Constructor for the Elevator class.
+     * @param name Name of the elevator
+     * @param area Area of the elevator
+     * @param capacity Capacity of the elevator
+     */
     public Elevator(String name, Rectangle area, int capacity) {
         super(name, area, capacity);
         color = Color.ORANGE;

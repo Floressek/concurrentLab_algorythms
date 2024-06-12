@@ -17,8 +17,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
+/**
+ * The Simulation class represents the main simulation environment.
+ * It extends JFrame to create a GUI for the simulation.
+ * It contains a list of plans and visitors for the simulation.
+ * It also contains an ExecutorService to manage threads for the simulation.
+ */
 public class Simulation extends JFrame {
 
+    // Default values for visitor count, small capacity, big capacity, and lift capacity
     @Getter
     @Setter
     private int visitorCount = 10;
@@ -32,22 +39,32 @@ public class Simulation extends JFrame {
     @Setter
     private int liftCapacity = 5;
 
+    // Panel for the simulation
     private JPanel panel;
+    // List of plans for the simulation
     private List<Plan> plans = new ArrayList<>();
+    // List of visitors for the simulation
     private List<Visitor> visitors = new ArrayList<>();
 
+    // ExecutorService for managing threads
     private ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
+    /**
+     * Constructor for the Simulation class.
+     * It initializes the GUI for the simulation.
+     */
     public Simulation() throws HeadlessException {
         setTitle("Visitor Simulation");
         setSize(1980, 1024);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        // Create buttons and slider for the simulation
         var btnPause = new JToggleButton("Pause");
         var btnRestart = new JButton("Restart");
         var sliderVisitorCount = getjSlider();
 
 
+        // Create command panel
         var cmdPanel = new JToolBar();
         cmdPanel.add(btnRestart);
         cmdPanel.addSeparator();
@@ -89,6 +106,7 @@ public class Simulation extends JFrame {
         add(panel, BorderLayout.CENTER);
     }
 
+    // Create slider for visitor count
     private JSlider getjSlider() {
         var sliderVisitorCount = new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
         sliderVisitorCount.setMajorTickSpacing(10);
@@ -105,10 +123,14 @@ public class Simulation extends JFrame {
         return sliderVisitorCount;
     }
 
+    // Get list of runnable objects
     List<Runnable> getRunnable() {
         var result = new ArrayList<Runnable>(visitors);
 
+        // Add visitables that are runnable
         if (plans.size() != 0) {
+            // Step 1: Get the first plan, then get the visitables from the plan,
+            // then filter the visitables to get only the runnable visitables, then add the visitables to the result list
             plans.get(0).getVisitables().stream()
                     .filter(v -> v instanceof Runnable)
                     .map(Runnable.class::cast)
@@ -117,13 +139,17 @@ public class Simulation extends JFrame {
         return result;
     }
 
+    // Create simulation
     private void createSimulation() {
         visitors = new ArrayList<>();
         plans = new ArrayList<>();
 
+        // Create plan A
         var planA = createPlan(Plan.PlanType.A);
+        // Create plan B
         var planB = planA.reverse();
 
+        // Create visitors and assign plans
         for (int i = 0; i < visitorCount; i++) {
             var plan = i % 2 == 0 ? planA : planB;
             var color = i % 2 == 0 ? Color.BLUE : Color.RED;
@@ -139,6 +165,7 @@ public class Simulation extends JFrame {
         plans.add(planB);
     }
 
+    // Force restart simulation
     void restartSimulation() {
         for (var v : getRunnable()) {
             if (v instanceof Controllable)
@@ -148,16 +175,18 @@ public class Simulation extends JFrame {
         startSimulation();
     }
 
+    // Start simulation
     void startSimulation() {
         for (var v : getRunnable()) {
             executor.execute(Thread.ofVirtual().start(v));
         }
     }
 
+    // Pause simulation
     void pauseSimulation() {
         for (var v : getRunnable()) {
             try {
-                if (v instanceof Controllable) {
+                if (v instanceof Controllable) { // Check if v is an instance of Controllable
                     ((Controllable) v).pause();
                 }
             } catch (InterruptedException e) {
@@ -166,6 +195,7 @@ public class Simulation extends JFrame {
         }
     }
 
+    // Resume simulation
     void resumeSimulation() {
         for (var v : getRunnable()) {
             if (v instanceof Controllable) {
@@ -174,9 +204,11 @@ public class Simulation extends JFrame {
         }
     }
 
+    // Create plan
     Plan createPlan(Plan.PlanType planType) {
         Plan plan = new Plan();
 
+        // Create plan based on plan type
         switch (planType) {
             case A -> {
                 var smallRoomSize = 100 * 3;
@@ -222,6 +254,7 @@ public class Simulation extends JFrame {
                 // room4
                 var room4 = new Room("R4", new Rectangle(room3.area.x, conn34.area.y + conn34.area.height, smallRoomSize, smallRoomSize), smallCapacity);
 
+                // Add visitables to plan
                 plan.addVisitable(elevator1);
                 plan.addVisitable(room2);
                 plan.addVisitable(conn12);
@@ -249,6 +282,7 @@ public class Simulation extends JFrame {
         return plan;
     }
 
+    // Load configuration from file
     private static Properties loadConfig(String path) {
         // load data
         if (path == null) {
@@ -265,6 +299,7 @@ public class Simulation extends JFrame {
         }
     }
 
+    // Main method
     public static void main(String[] args) {
         String path = args.length != 0 ? args[0] : null;
         var config = loadConfig(path);
@@ -283,6 +318,7 @@ public class Simulation extends JFrame {
         });
     }
 
+    // Load configuration for the external file
     private void loadFromConfig(Properties config) {
         int count = Integer.valueOf(config.getProperty("simulation.visitor-count", "10"));
         visitorCount = count;

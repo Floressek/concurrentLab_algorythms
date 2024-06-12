@@ -10,10 +10,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 
+/**
+ * Abstract class Visitable that extends Paintable.
+ * This class represents a visitable object in the simulation.
+ * It has a name, an area, a capacity, and a visitor count.
+ * It also has a semaphore for controlling access to the visitable.
+ */
+
 public abstract class Visitable extends Paintable {
     @Getter
     protected final String name;
 
+    /**
+     * Enum for the sides of the visitable.
+     */
     enum Side {
         Top, Bottom, Left, Right
     }
@@ -25,6 +35,12 @@ public abstract class Visitable extends Paintable {
 
     private Semaphore semaphore;
 
+    /**
+     * Constructor for the Visitable class.
+     * @param name Name of the visitable
+     * @param area Area of the visitable
+     * @param capacity Capacity of the visitable
+     */
     public Visitable(String name, Rectangle area, int capacity) {
         this.name = name;
         this.area = area;
@@ -32,6 +48,11 @@ public abstract class Visitable extends Paintable {
         this.semaphore = new Semaphore(capacity);
     }
 
+    /**
+     * Constructor for the Visitable class.
+     * @param name Name of the visitable
+     * @param area Area of the visitable
+     */
     public Visitable(String name, Rectangle area) {
         this.name = name;
         this.area = area;
