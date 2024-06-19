@@ -9,7 +9,7 @@ This project demonstrates the implementation of classic synchronization algorith
 - **Peterson's Algorithm**: Simplifies Dekker's approach for two threads, ensuring mutual exclusion with a simpler logic.
 - **Semaphore Example**: Demonstrates the use of semaphores to control access to a shared resource by multiple threads.
 
-**Main project of the mine-sightseeing simulation can be found in src/simulation repository.**
+# Main project of the mine-sightseeing simulation can be found in src/simulation repository.
 
 ## Getting Started
 
