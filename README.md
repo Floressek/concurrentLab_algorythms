@@ -1,52 +1,102 @@
-# Java Synchronization Algorithms
+# Mine Simulation Project (Concurrent Programming)
 
-This project demonstrates the implementation of classic synchronization algorithms in Java, including Dekker's, Lamport's, and Peterson's algorithms, along with an example of a semaphore. These implementations are designed to help understand the basics of process synchronization and mutual exclusion in concurrent programming.
+## Project Structure 🗂️
+The project is part of a larger repository containing different laboratory works. The main simulation project is located in the `simulation` folder, while other directories contain labs from different classes.
 
-## Overview
-
-- **Dekker's Algorithm**: Ensures mutual exclusion between two threads.
-- **Lamport's Bakery Algorithm**: A more general algorithm that allows for mutual exclusion among N threads.
-- **Peterson's Algorithm**: Simplifies Dekker's approach for two threads, ensuring mutual exclusion with a simpler logic.
-- **Semaphore Example**: Demonstrates the use of semaphores to control access to a shared resource by multiple threads.
-
-# Main project of the mine-sightseeing simulation can be found in lab_src/src/simulation repository.
-
-## Getting Started
-
-### Prerequisites
-
-- Java JDK 11 or later
-- Your favorite IDE or text editor
-
-### Running the Examples
-
-1. Clone the repository:
-```bash
-git clone https://your-repository-url-here.git](https://github.com/Floressek/concurrentLab_algorythms)
+```
+.
+├── .idea
+├── demo
+├── lab_src
+│   ├── .idea
+│   └── src
+│       ├── lab3_4
+│       ├── lab5_6
+│       ├── lab7_8
+│       ├── lab9_10
+│       └── simulation
+│           ├── Connector.java
+│           ├── Controllable.java
+│           ├── Elevator.java
+│           ├── Paintable.java
+│           ├── Plan.java
+│           ├── Room.java
+│           ├── Simulation.java
+│           ├── Visitable.java
+│           ├── Visitor.java
+│           ├── config.properties
+│           ├── .gitignore
+│           └── lab3_4.iml
+├── .gitignore
+├── LICENSE.md
+├── README.md
+└── lab3_4.iml
 ```
 
-3. Navigate to the cloned directory:
-```bash
-cd java-synchronization-algorithms
+## About the Project 📝
+This is a concurrent programming project that simulates a salt mine tourist attraction in the city of Saltville. The simulation demonstrates the concurrent movement of visitors through different rooms and elevators while respecting capacity constraints and movement rules.
+
+### Core Components
+
+- `Simulation.java`: Main class that controls the entire simulation
+- `Visitor.java`: Represents individual tourists in the simulation
+- `Room.java`: Represents visitable rooms in the mine
+- `Elevator.java`: Handles vertical transportation of visitors
+- `Plan.java`: Manages the visiting routes (Plan A and Plan B)
+- `Connector.java`: Handles connections between rooms
+- Other utility classes (`Paintable.java`, `Controllable.java`, `Visitable.java`)
+
+## Key Features 🔑
+
+- Multi-threaded simulation of tourist movement
+- Two distinct visiting plans (Plan A and Plan B)
+- Graphical user interface showing real-time simulation
+- Configurable parameters (number of visitors, room capacities, etc.)
+- Synchronized access to shared resources (rooms, elevators)
+- Pause/Resume/Restart functionality
+- Visual representation of visitor paths and states
+
+## Configuration ⚙️
+
+The simulation parameters can be configured through the `config.properties` file:
+
+```properties
+simulation.visitor-count=20
+simulation.small-capacity=5
+simulation.big-capacity=10
+simulation.lift-capacity=5
 ```
 
-3. Compile the Java files (example):
-```bash
-javac Zadanie_1/Dekker.java Zadanie_2/Peterson.java Zadanie_3/Lamport.java Zadanie_4/SemaphoreExample.java
-```
+## Movement Rules 📋
 
-4. Run the compiled Java classes (example):
-```bash
-java Zadanie_1.Dekker
-java Zadanie_2.Peterson
-java Zadanie_3.Lamport
-java Zadanie_4.SemaphoreExample
-```
+1. Visitors cannot stop in passages between rooms
+2. Passages are bidirectional
+3. Passages allow only one person at a time
+4. Visitors can pass through rooms without visiting them
+5. Rooms cannot be divided into restricted access zones
 
-## Contributing
+## GUI Controls 🎮
 
-Contributions are welcome! Please feel free to submit a pull request.
+- **Pause/Resume Button**: Toggles the simulation state
+- **Restart Button**: Restarts the simulation with current settings
+- **Visitor Count Slider**: Adjusts the number of visitors in real-time
 
-## License
+## Notes 📌
 
-This project is open-sourced under the MIT License. See the LICENSE file for more details.
+- Each room displays a counter showing the current number of visitors
+- Green paths indicate visitor routes
+- Visitors can move either randomly (when visiting) or directly (when passing through)
+- The Pause button changes to Resume when simulation is paused
+- Multiple rapid clicks on the Restart button should be avoided to prevent unstable behavior
+
+## Implementation Details 🔧
+
+The project uses various Java concurrency mechanisms:
+- `ExecutorService` for thread management
+- `Semaphore` for controlling room access
+- `synchronized` blocks for thread safety
+- `BlockingQueue` for managing visitor queues
+- Virtual threads for efficient concurrent execution
+
+## Project Status ⌛
+This project was completed on 06/10/2024 as part of the Concurrent Programming course (PW-12/2024) under the supervision of dr inż. Jarosław Rulka.
