@@ -3,6 +3,39 @@
 ## Overview 🎯
 This project simulates a tourist attraction in a salt mine, implementing concurrent programming principles to manage visitor movement and resource allocation. The simulation recreates a real-world scenario where multiple tourists navigate through a complex mine structure with specific constraints and rules.
 
+## Project Structure 🗂️
+The project is part of a larger repository containing different laboratory works. The main simulation project is located in the `simulation` folder, while other directories contain labs from different classes.
+
+```
+.
+├── .idea
+├── demo
+├── lab_src
+│   ├── .idea
+│   └── src
+│       ├── lab3_4
+│       ├── lab5_6
+│       ├── lab7_8
+│       ├── lab9_10
+│       └── simulation
+│           ├── Connector.java
+│           ├── Controllable.java
+│           ├── Elevator.java
+│           ├── Paintable.java
+│           ├── Plan.java
+│           ├── Room.java
+│           ├── Simulation.java
+│           ├── Visitable.java
+│           ├── Visitor.java
+│           ├── config.properties
+│           ├── .gitignore
+│           └── lab3_4.iml
+├── .gitignore
+├── LICENSE.md
+├── README.md
+└── lab3_4.iml
+```
+
 ## Detailed Project Description 📋
 
 ### Mine Structure
